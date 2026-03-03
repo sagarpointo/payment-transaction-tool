@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment Transaction Utility</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+    button {
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Payment Transaction Tool</h2>
+
+  <label>Action</label>
+  <select id="actionSelect">
+    <option value="add">Add Payment</option>
+    <option value="cancel">Cancel Payment</option>
+  </select>
+
+  <!-- ADD FORM -->
+  <div id="addForm">
+    <label>Customer Phone</label>
+    <input type="text" id="addPhone" placeholder="Enter phone number" />
+
+    <label>Amounts (comma separated)</label>
+    <input type="text" id="addAmounts" placeholder="e.g. 3000,5000" />
+
+    <label>Dates (comma separated, YYYY-MM-DD)</label>
+    <input type="text" id="addDates" placeholder="e.g. 2026-03-01,2026-03-02" />
+
+    <label>Requested By</label>
+    <input type="text" id="requestedBy" placeholder="Enter requested by name" />
+
+    <button id="addBtn">Generate Add Query</button>
+  </div>
+
+  <!-- CANCEL FORM -->
+  <div id="cancelForm" class="hidden">
+    <label>Transaction IDs (comma separated)</label>
+    <input type="text" id="cancelIds" placeholder="e.g. 1234,1235" />
+
+    <label>Deleted By</label>
+    <input type="text" id="deletedBy" placeholder="Enter name" />
+
+    <button id="cancelBtn">Generate Cancel Query</button>
+  </div>
+
+  <h3>Generated SQL</h3>
+  <pre id="output"></pre>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const actionSelect = document.getElementById("actionSelect");
+  const addForm = document.getElementById("addForm");
+  const cancelForm = document.getElementById("cancelForm");
+  const output = document.getElementById("output");
+
+  actionSelect.addEventListener("change", function () {
+    if (this.value === "add") {
+      addForm.classList.remove("hidden");
+      cancelForm.classList.add("hidden");
+    } else {
+      addForm.classList.add("hidden");
+      cancelForm.classList.remove("hidden");
+    }
+    output.textContent = "";
+  });
+
+  document.getElementById("addBtn").addEventListener("click", function () {
+    const phone = document.getElementById("addPhone").value.trim();
+    const amounts = document.getElementById("addAmounts").value
+      .split(",")
+      .map(a => a.trim())
+      .filter(a => a);
+    const dates = document.getElementById("addDates").value
+      .split(",")
+      .map(d => `'${d.trim()}'`)
+      .filter(d => d !== "''");
+    const requestedBy = document.getElementById("requestedBy").value.trim();
+
+    if (!phone || amounts.length === 0 || dates.length === 0 || !requestedBy) {
+      alert("Please fill all fields correctly.");
+      return;
+    }
+
+    const query = `
+SELECT * FROM public.add_payment_transactions(
+  '${phone}',
+  ARRAY[${amounts.join(",")}],
+  ARRAY[${dates.join(",")}],
+  '${requestedBy}'
+);
+`;
+
+    output.textContent = query.trim();
+  });
+
+  document.getElementById("cancelBtn").addEventListener("click", function () {
+    const ids = document.getElementById("cancelIds").value
+      .split(",")
+      .map(id => id.trim())
+      .filter(id => id);
+
+    const deletedBy = document.getElementById("deletedBy").value.trim();
+
+    if (ids.length === 0 || !deletedBy) {
+      alert("Please enter transaction IDs and Deleted By name.");
+      return;
+    }
+
+    const query = `
+SELECT * FROM public.cancel_payment_transactions(
+  NULL,
+  ARRAY[${ids.join(",")}],
+  '${deletedBy}'
+);
+`;
+
+    output.textContent = query.trim();
+  });
+
+});
+</script>
+
+</body>
+</html>
