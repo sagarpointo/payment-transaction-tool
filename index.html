@@ -101,7 +101,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const addForm = document.getElementById("addForm");
   const cancelForm = document.getElementById("cancelForm");
   const output = document.getElementById("output");
-
   const radios = document.querySelectorAll('input[name="action"]');
 
   function formatPhoneNumber(phoneNumber, addCountryCode) {
@@ -144,6 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // ADD QUERY
   document.getElementById("addBtn").addEventListener("click", function () {
     try {
       let phone = document.getElementById("addPhone").value.trim();
@@ -168,10 +168,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const query = `
 SELECT * FROM public.add_payment_transactions(
-  '${phone}',
-  ARRAY[${amounts.join(",")}],
-  ARRAY[${dates.join(",")}],
-  '${requestedBy}'
+  '${phone}'::varchar,
+  ARRAY[${amounts.join(",")}]::numeric[],
+  ARRAY[${dates.join(",")}]::timestamp[],
+  '${requestedBy}'::text
 );
 `;
 
@@ -181,6 +181,7 @@ SELECT * FROM public.add_payment_transactions(
     }
   });
 
+  // CANCEL QUERY
   document.getElementById("cancelBtn").addEventListener("click", function () {
     try {
       let phone = document.getElementById("cancelPhone").value.trim();
@@ -200,9 +201,9 @@ SELECT * FROM public.add_payment_transactions(
 
       const query = `
 SELECT * FROM public.cancel_payment_transactions(
-  '${phone}',
-  ARRAY[${ids.join(",")}],
-  '${deletedBy}'
+  '${phone}'::varchar,
+  ARRAY[${ids.join(",")}]::integer[],
+  '${deletedBy}'::varchar
 );
 `;
 
@@ -214,10 +215,7 @@ SELECT * FROM public.cancel_payment_transactions(
 
   document.getElementById("copyBtn").addEventListener("click", function () {
     const text = output.textContent;
-    if (!text) {
-      alert("Nothing to copy!");
-      return;
-    }
+    if (!text) return;
     navigator.clipboard.writeText(text);
   });
 
