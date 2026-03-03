@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payment Transaction Utility</title>
+  <title>Payment Transaction Tool</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      max-width: 600px;
+      max-width: 650px;
       margin: auto;
     }
     input, select, button {
@@ -25,49 +25,59 @@
       background: #f4f4f4;
       padding: 10px;
       overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .copy-btn {
+      background: #2ea44f;
+      color: white;
+      border: none;
     }
   </style>
 </head>
 <body>
 
-  <h2>Payment Transaction Tool</h2>
+<h2>Payment Transaction Tool</h2>
 
-  <label>Action</label>
-  <select id="actionSelect">
-    <option value="add">Add Payment</option>
-    <option value="cancel">Cancel Payment</option>
-  </select>
+<label>Action</label>
+<select id="actionSelect">
+  <option value="add">Add Payment</option>
+  <option value="cancel">Cancel Payment</option>
+</select>
 
-  <!-- ADD FORM -->
-  <div id="addForm">
-    <label>Customer Phone</label>
-    <input type="text" id="addPhone" placeholder="Enter phone number" />
+<!-- ADD FORM -->
+<div id="addForm">
+  <label>Customer Phone</label>
+  <input type="text" id="addPhone" placeholder="Enter phone number" />
 
-    <label>Amounts (comma separated)</label>
-    <input type="text" id="addAmounts" placeholder="e.g. 3000,5000" />
+  <label>Amounts (comma separated)</label>
+  <input type="text" id="addAmounts" placeholder="e.g. 3000,5000" />
 
-    <label>Dates (comma separated, YYYY-MM-DD)</label>
-    <input type="text" id="addDates" placeholder="e.g. 2026-03-01,2026-03-02" />
+  <label>Dates (comma separated, YYYY-MM-DD)</label>
+  <input type="text" id="addDates" placeholder="e.g. 2026-03-01,2026-03-02" />
 
-    <label>Requested By</label>
-    <input type="text" id="requestedBy" placeholder="Enter requested by name" />
+  <label>Requested By</label>
+  <input type="text" id="requestedBy" placeholder="Enter requested by name" />
 
-    <button id="addBtn">Generate Add Query</button>
-  </div>
+  <button id="addBtn">Generate Add Query</button>
+</div>
 
-  <!-- CANCEL FORM -->
-  <div id="cancelForm" class="hidden">
-    <label>Transaction IDs (comma separated)</label>
-    <input type="text" id="cancelIds" placeholder="e.g. 1234,1235" />
+<!-- CANCEL FORM -->
+<div id="cancelForm" class="hidden">
+  <label>Customer Phone</label>
+  <input type="text" id="cancelPhone" placeholder="Enter phone number" />
 
-    <label>Deleted By</label>
-    <input type="text" id="deletedBy" placeholder="Enter name" />
+  <label>Transaction IDs (comma separated)</label>
+  <input type="text" id="cancelIds" placeholder="e.g. 1234,1235" />
 
-    <button id="cancelBtn">Generate Cancel Query</button>
-  </div>
+  <label>Deleted By</label>
+  <input type="text" id="deletedBy" placeholder="Enter name" />
 
-  <h3>Generated SQL</h3>
-  <pre id="output"></pre>
+  <button id="cancelBtn">Generate Cancel Query</button>
+</div>
+
+<h3>Generated SQL</h3>
+<pre id="output"></pre>
+<button class="copy-btn" id="copyBtn">Copy SQL</button>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -76,6 +86,33 @@ document.addEventListener("DOMContentLoaded", function () {
   const addForm = document.getElementById("addForm");
   const cancelForm = document.getElementById("cancelForm");
   const output = document.getElementById("output");
+
+  function formatPhoneNumber(phoneNumber, addCountryCode) {
+    if (!phoneNumber || typeof phoneNumber !== 'string') {
+      throw new Error('Phone number must be a valid string');
+    }
+
+    const cleaned = phoneNumber.replaceAll('+91', '');
+
+    if (!/^\d+$/.test(cleaned)) {
+      throw new Error('Phone number must contain only numeric characters');
+    }
+
+    if (!addCountryCode && phoneNumber.startsWith('+91')) {
+      phoneNumber = phoneNumber.slice(3);
+    }
+
+    if (!phoneNumber.startsWith('+91') &&
+        (phoneNumber.length > 10 || phoneNumber.length < 10)) {
+      throw new Error('Phone number is invalid.');
+    }
+
+    if (addCountryCode && !phoneNumber.startsWith('+91')) {
+      return `+91${phoneNumber}`;
+    }
+
+    return phoneNumber;
+  }
 
   actionSelect.addEventListener("change", function () {
     if (this.value === "add") {
@@ -89,23 +126,28 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   document.getElementById("addBtn").addEventListener("click", function () {
-    const phone = document.getElementById("addPhone").value.trim();
-    const amounts = document.getElementById("addAmounts").value
-      .split(",")
-      .map(a => a.trim())
-      .filter(a => a);
-    const dates = document.getElementById("addDates").value
-      .split(",")
-      .map(d => `'${d.trim()}'`)
-      .filter(d => d !== "''");
-    const requestedBy = document.getElementById("requestedBy").value.trim();
+    try {
+      let phone = document.getElementById("addPhone").value.trim();
+      phone = formatPhoneNumber(phone, true);
 
-    if (!phone || amounts.length === 0 || dates.length === 0 || !requestedBy) {
-      alert("Please fill all fields correctly.");
-      return;
-    }
+      const amounts = document.getElementById("addAmounts").value
+        .split(",")
+        .map(a => a.trim())
+        .filter(a => a);
 
-    const query = `
+      const dates = document.getElementById("addDates").value
+        .split(",")
+        .map(d => `'${d.trim()}'`)
+        .filter(d => d !== "''");
+
+      const requestedBy = document.getElementById("requestedBy").value.trim();
+
+      if (!amounts.length || !dates.length || !requestedBy) {
+        alert("Please fill all fields correctly.");
+        return;
+      }
+
+      const query = `
 SELECT * FROM public.add_payment_transactions(
   '${phone}',
   ARRAY[${amounts.join(",")}],
@@ -114,31 +156,51 @@ SELECT * FROM public.add_payment_transactions(
 );
 `;
 
-    output.textContent = query.trim();
+      output.textContent = query.trim();
+    } catch (err) {
+      alert(err.message);
+    }
   });
 
   document.getElementById("cancelBtn").addEventListener("click", function () {
-    const ids = document.getElementById("cancelIds").value
-      .split(",")
-      .map(id => id.trim())
-      .filter(id => id);
+    try {
+      let phone = document.getElementById("cancelPhone").value.trim();
+      phone = formatPhoneNumber(phone, true);
 
-    const deletedBy = document.getElementById("deletedBy").value.trim();
+      const ids = document.getElementById("cancelIds").value
+        .split(",")
+        .map(id => id.trim())
+        .filter(id => id);
 
-    if (ids.length === 0 || !deletedBy) {
-      alert("Please enter transaction IDs and Deleted By name.");
-      return;
-    }
+      const deletedBy = document.getElementById("deletedBy").value.trim();
 
-    const query = `
+      if (!ids.length || !deletedBy) {
+        alert("Please enter all fields.");
+        return;
+      }
+
+      const query = `
 SELECT * FROM public.cancel_payment_transactions(
-  NULL,
+  '${phone}',
   ARRAY[${ids.join(",")}],
   '${deletedBy}'
 );
 `;
 
-    output.textContent = query.trim();
+      output.textContent = query.trim();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    const text = output.textContent;
+    if (!text) {
+      alert("Nothing to copy!");
+      return;
+    }
+    navigator.clipboard.writeText(text);
+    alert("SQL copied to clipboard!");
   });
 
 });
