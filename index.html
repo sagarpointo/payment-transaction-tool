@@ -2,225 +2,408 @@
 <html>
 <head>
   <title>Payment Transaction Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #181c27;
+      --border: #272c3d;
+      --accent: #4f8ef7;
+      --accent2: #f7c94f;
+      --accent3: #4ff79e;
+      --danger: #f7614f;
+      --text: #e8eaf0;
+      --muted: #7b82a0;
+      --radius: 10px;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 650px;
-      margin: auto;
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px 60px;
     }
-    input, button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 8px;
-      margin-bottom: 12px;
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
     }
-    button {
-      cursor: pointer;
+
+    header {
+      margin-bottom: 32px;
     }
-    .hidden {
-      display: none;
+
+    header h1 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--accent);
     }
-    pre {
-      background: #f4f4f4;
-      padding: 10px;
-      overflow-x: auto;
-      white-space: pre-wrap;
+
+    header p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
     }
-    .copy-btn {
-      background: #2ea44f;
-      color: white;
-      border: none;
-    }
-    .radio-group {
+
+    /* TAB BAR */
+    .tabs {
       display: flex;
-      gap: 20px;
-      margin-bottom: 15px;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 24px;
     }
-    .radio-group label {
+
+    .tab-btn {
+      flex: 1;
+      padding: 9px 8px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      letter-spacing: 0.03em;
+    }
+
+    .tab-btn:hover { color: var(--text); background: #232840; }
+
+    .tab-btn.active[data-tab="add"] { background: #1a2a4a; color: var(--accent); }
+    .tab-btn.active[data-tab="update"] { background: #2a2a1a; color: var(--accent2); }
+    .tab-btn.active[data-tab="cancel"] { background: #2a1a1a; color: var(--danger); }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+
+    /* FORM */
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 7px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="text"]::placeholder { color: #3d4460; }
+
+    .hint {
+      font-size: 0.68rem;
+      color: #4a5070;
+      margin-top: 5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* BUTTONS */
+    .gen-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .gen-btn:active { transform: scale(0.98); }
+    .gen-btn:hover { opacity: 0.88; }
+
+    .gen-btn.add { background: var(--accent); color: #fff; }
+    .gen-btn.update { background: var(--accent2); color: #111; }
+    .gen-btn.cancel-btn { background: var(--danger); color: #fff; }
+
+    /* OUTPUT */
+    .output-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .output-header {
       display: flex;
       align-items: center;
-      gap: 5px;
-      cursor: pointer;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #13161f;
     }
+
+    .output-header span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .copy-btn {
+      padding: 5px 14px;
+      background: #1e2e1e;
+      color: var(--accent3);
+      border: 1px solid #2a3d2a;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { background: #253525; }
+    .copy-btn.copied { color: var(--accent3); background: #1a3a1a; }
+
+    pre#output {
+      padding: 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #a8c4f0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 60px;
+      background: transparent;
+    }
+
+    pre#output:empty::after {
+      content: '-- SQL will appear here';
+      color: #2d334d;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .dot.add { background: var(--accent); }
+    .dot.update { background: var(--accent2); }
+    .dot.cancel { background: var(--danger); }
   </style>
 </head>
 <body>
 
-<h2>Payment Transaction Tool</h2>
+<div class="container">
+  <header>
+    <h1>⬡ payment_transaction_tool</h1>
+    <p>// generate SQL queries for payment operations</p>
+  </header>
 
-<div class="radio-group">
-  <label>
-    <input type="radio" name="action" value="add" checked>
-    Add
-  </label>
-  <label>
-    <input type="radio" name="action" value="cancel">
-    Cancel
-  </label>
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="add">＋ ADD</button>
+    <button class="tab-btn" data-tab="update">✎ UPDATE</button>
+    <button class="tab-btn" data-tab="cancel">✕ CANCEL</button>
+  </div>
+
+  <!-- ADD FORM -->
+  <div class="form-section active card" id="section-add">
+    <div class="field">
+      <label>Customer Phone</label>
+      <input type="text" id="addPhone" placeholder="e.g. 9876543210" />
+    </div>
+    <div class="field">
+      <label>Amounts (comma separated)</label>
+      <input type="text" id="addAmounts" placeholder="e.g. 3000,5000" />
+    </div>
+    <div class="field">
+      <label>Dates (comma separated, YYYY-MM-DD)</label>
+      <input type="text" id="addDates" placeholder="e.g. 2026-03-01,2026-03-02" />
+    </div>
+    <div class="field">
+      <label>Requested By</label>
+      <input type="text" id="requestedBy" placeholder="Enter name" />
+    </div>
+    <button class="gen-btn add" id="addBtn">GENERATE ADD QUERY</button>
+  </div>
+
+  <!-- UPDATE FORM -->
+  <div class="form-section card" id="section-update">
+    <div class="field">
+      <label>Customer Phone</label>
+      <input type="text" id="updatePhone" placeholder="e.g. 9876543210" />
+    </div>
+    <div class="field">
+      <label>Transaction IDs (comma separated)</label>
+      <input type="text" id="updateIds" placeholder="e.g. 213479,221400" />
+      <div class="hint">// one UPDATE query will be generated per transaction ID</div>
+    </div>
+    <div class="field">
+      <label>New Amounts (comma separated)</label>
+      <input type="text" id="updateAmounts" placeholder="e.g. 5800,6200" />
+      <div class="hint">// must match count of transaction IDs</div>
+    </div>
+    <div class="field">
+      <label>Old Amounts (comma separated)</label>
+      <input type="text" id="updateOldAmounts" placeholder="e.g. 4900,5000" />
+      <div class="hint">// used in remarks — must match count of IDs</div>
+    </div>
+    <div class="field">
+      <label>Requested By</label>
+      <input type="text" id="updateRequestedBy" placeholder="Enter name" />
+    </div>
+    <button class="gen-btn update" id="updateBtn">GENERATE UPDATE QUERY</button>
+  </div>
+
+  <!-- CANCEL FORM -->
+  <div class="form-section card" id="section-cancel">
+    <div class="field">
+      <label>Customer Phone</label>
+      <input type="text" id="cancelPhone" placeholder="e.g. 9876543210" />
+    </div>
+    <div class="field">
+      <label>Transaction IDs (comma separated)</label>
+      <input type="text" id="cancelIds" placeholder="e.g. 1234,1235" />
+    </div>
+    <div class="field">
+      <label>Deleted By</label>
+      <input type="text" id="deletedBy" placeholder="Enter name" />
+    </div>
+    <button class="gen-btn cancel-btn" id="cancelBtn">GENERATE CANCEL QUERY</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="output-block">
+    <div class="output-header">
+      <span>generated sql</span>
+      <button class="copy-btn" id="copyBtn">COPY</button>
+    </div>
+    <pre id="output"></pre>
+  </div>
 </div>
-
-<!-- ADD FORM -->
-<div id="addForm">
-  <label>Customer Phone</label>
-  <input type="text" id="addPhone" placeholder="Enter phone number" />
-
-  <label>Amounts (comma separated)</label>
-  <input type="text" id="addAmounts" placeholder="e.g. 3000,5000" />
-
-  <label>Dates (comma separated, YYYY-MM-DD)</label>
-  <input type="text" id="addDates" placeholder="e.g. 2026-03-01,2026-03-02" />
-
-  <label>Requested By</label>
-  <input type="text" id="requestedBy" placeholder="Enter requested by name" />
-
-  <button id="addBtn">Generate Add Query</button>
-</div>
-
-<!-- CANCEL FORM -->
-<div id="cancelForm" class="hidden">
-  <label>Customer Phone</label>
-  <input type="text" id="cancelPhone" placeholder="Enter phone number" />
-
-  <label>Transaction IDs (comma separated)</label>
-  <input type="text" id="cancelIds" placeholder="e.g. 1234,1235" />
-
-  <label>Deleted By</label>
-  <input type="text" id="deletedBy" placeholder="Enter name" />
-
-  <button id="cancelBtn">Generate Cancel Query</button>
-</div>
-
-<h3>Generated SQL</h3>
-<pre id="output"></pre>
-<button class="copy-btn" id="copyBtn">Copy SQL</button>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  const addForm = document.getElementById("addForm");
-  const cancelForm = document.getElementById("cancelForm");
   const output = document.getElementById("output");
-  const radios = document.querySelectorAll('input[name="action"]');
 
-  function formatPhoneNumber(phoneNumber, addCountryCode) {
-    if (!phoneNumber || typeof phoneNumber !== 'string') {
-      throw new Error('Phone number must be a valid string');
-    }
-
-    const cleaned = phoneNumber.replaceAll('+91', '');
-
-    if (!/^\d+$/.test(cleaned)) {
-      throw new Error('Phone number must contain only numeric characters');
-    }
-
-    if (!addCountryCode && phoneNumber.startsWith('+91')) {
-      phoneNumber = phoneNumber.slice(3);
-    }
-
-    if (!phoneNumber.startsWith('+91') &&
-        (phoneNumber.length > 10 || phoneNumber.length < 10)) {
-      throw new Error('Phone number is invalid.');
-    }
-
-    if (addCountryCode && !phoneNumber.startsWith('+91')) {
-      return `+91${phoneNumber}`;
-    }
-
-    return phoneNumber;
-  }
-
-  radios.forEach(radio => {
-    radio.addEventListener("change", function () {
-      if (this.value === "add") {
-        addForm.classList.remove("hidden");
-        cancelForm.classList.add("hidden");
-      } else {
-        addForm.classList.add("hidden");
-        cancelForm.classList.remove("hidden");
-      }
-      output.textContent = "";
+  // TAB SWITCHING
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('section-' + this.dataset.tab).classList.add('active');
+      output.textContent = '';
     });
   });
 
-  // ADD QUERY
+  function formatPhoneNumber(phoneNumber, addCountryCode) {
+    if (!phoneNumber || typeof phoneNumber !== 'string') throw new Error('Phone number must be a valid string');
+    const cleaned = phoneNumber.replace(/\+91/g, '');
+    if (!/^\d+$/.test(cleaned)) throw new Error('Phone number must contain only numeric characters');
+    const base = cleaned;
+    if (base.length !== 10) throw new Error('Phone number must be 10 digits.');
+    return addCountryCode ? `+91${base}` : base;
+  }
+
+  // ADD
   document.getElementById("addBtn").addEventListener("click", function () {
     try {
-      let phone = document.getElementById("addPhone").value.trim();
-      phone = formatPhoneNumber(phone, true);
-
-      const amounts = document.getElementById("addAmounts").value
-        .split(",")
-        .map(a => a.trim())
-        .filter(a => a);
-
-      const dates = document.getElementById("addDates").value
-        .split(",")
-        .map(d => `'${d.trim()}'`)
-        .filter(d => d !== "''");
-
+      const phone = formatPhoneNumber(document.getElementById("addPhone").value.trim(), true);
+      const amounts = document.getElementById("addAmounts").value.split(",").map(a => a.trim()).filter(Boolean);
+      const dates = document.getElementById("addDates").value.split(",").map(d => `'${d.trim()}'`).filter(d => d !== "''");
       const requestedBy = document.getElementById("requestedBy").value.trim();
-
-      if (!amounts.length || !dates.length || !requestedBy) {
-        alert("Please fill all fields correctly.");
-        return;
-      }
-
-      const query = `
-SELECT * FROM public.add_payment_transactions(
-  '${phone}'::varchar,
-  ARRAY[${amounts.join(",")}]::numeric[],
-  ARRAY[${dates.join(",")}]::timestamp[],
-  '${requestedBy}'::text
-);
-`;
-
-      output.textContent = query.trim();
-    } catch (err) {
-      alert(err.message);
-    }
+      if (!amounts.length || !dates.length || !requestedBy) { alert("Please fill all fields correctly."); return; }
+      output.textContent = `SELECT * FROM public.add_payment_transactions(\n  '${phone}'::varchar,\n  ARRAY[${amounts.join(",")}]::numeric[],\n  ARRAY[${dates.join(",")}]::timestamp[],\n  '${requestedBy}'::text\n);`;
+    } catch (err) { alert(err.message); }
   });
 
-  // CANCEL QUERY
+  // UPDATE
+  document.getElementById("updateBtn").addEventListener("click", function () {
+    try {
+      const phone = formatPhoneNumber(document.getElementById("updatePhone").value.trim(), true);
+      const ids = document.getElementById("updateIds").value.split(",").map(v => v.trim()).filter(Boolean);
+      const newAmounts = document.getElementById("updateAmounts").value.split(",").map(v => v.trim()).filter(Boolean);
+      const oldAmounts = document.getElementById("updateOldAmounts").value.split(",").map(v => v.trim()).filter(Boolean);
+      const requestedBy = document.getElementById("updateRequestedBy").value.trim();
+
+      if (!ids.length || !newAmounts.length || !oldAmounts.length || !requestedBy) {
+        alert("Please fill all fields correctly."); return;
+      }
+      if (ids.length !== newAmounts.length || ids.length !== oldAmounts.length) {
+        alert(`Mismatch: ${ids.length} IDs, ${newAmounts.length} new amounts, ${oldAmounts.length} old amounts. All must be equal.`); return;
+      }
+
+      const lines = [];
+      ids.forEach((id, i) => {
+        lines.push(
+          `UPDATE payment_transactions\nSET\n        amount = ${newAmounts[i]},\n        remarks = 'Amount updated from ${oldAmounts[i]} to ${newAmounts[i]} (Requested By (${requestedBy}))'\nWHERE\n        id = ${id};`
+        );
+      });
+      lines.push(`SELECT * FROM reconcile_payment_transactions('${phone}');`);
+      output.textContent = lines.join("\n\n");
+    } catch (err) { alert(err.message); }
+  });
+
+  // CANCEL
   document.getElementById("cancelBtn").addEventListener("click", function () {
     try {
-      let phone = document.getElementById("cancelPhone").value.trim();
-      phone = formatPhoneNumber(phone, true);
-
-      const ids = document.getElementById("cancelIds").value
-        .split(",")
-        .map(id => id.trim())
-        .filter(id => id);
-
+      const phone = formatPhoneNumber(document.getElementById("cancelPhone").value.trim(), true);
+      const ids = document.getElementById("cancelIds").value.split(",").map(id => id.trim()).filter(Boolean);
       const deletedBy = document.getElementById("deletedBy").value.trim();
-
-      if (!ids.length || !deletedBy) {
-        alert("Please enter all fields.");
-        return;
-      }
-
-      const query = `
-SELECT * FROM public.cancel_payment_transactions(
-  '${phone}'::varchar,
-  ARRAY[${ids.join(",")}]::integer[],
-  '${deletedBy}'::varchar
-);
-`;
-
-      output.textContent = query.trim();
-    } catch (err) {
-      alert(err.message);
-    }
+      if (!ids.length || !deletedBy) { alert("Please enter all fields."); return; }
+      output.textContent = `SELECT * FROM public.cancel_payment_transactions(\n  '${phone}'::varchar,\n  ARRAY[${ids.join(",")}]::integer[],\n  '${deletedBy}'::varchar\n);`;
+    } catch (err) { alert(err.message); }
   });
 
+  // COPY
   document.getElementById("copyBtn").addEventListener("click", function () {
     const text = output.textContent;
     if (!text) return;
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).then(() => {
+      this.textContent = "COPIED ✓";
+      this.classList.add("copied");
+      setTimeout(() => { this.textContent = "COPY"; this.classList.remove("copied"); }, 1800);
+    });
   });
 
 });
 </script>
-
 </body>
 </html>
